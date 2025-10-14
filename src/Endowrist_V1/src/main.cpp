@@ -1,24 +1,24 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include "MPU9250.h"
-#include <Wire.h> //needed for I2C to read IMU
-#include <ArduinoJson.h>
+#include <Wire.h>
+#include <ArduinoJson.h>  // No cal .hpp, la versió 7 manté compatibilitat amb .h
 
 // Device ID
-const char *deviceId = "G5_Endo";
+const char *deviceId = "G3_Endo";
 
 // Wi-Fi credentials
 const char *ssid = "Robotics_UB";
 const char *password = "rUBot_xx";
 
-// Botons 
+// Botons
 const int PIN_S3 = 14;
 const int PIN_S4 = 27;
 int s3Status = HIGH;
 int s4Status = HIGH;
 
 // UDP settings
-IPAddress receiverComputerIP(192, 168, 1, 55); // IP address of your PC5-computer - CHANGE THIS!
+IPAddress receiverComputerIP(192, 168, 1, 35);
 const int udpPort = 12345;
 WiFiUDP udp;
 
@@ -46,39 +46,33 @@ void updateOrientation() {
     Endo_yaw = -mpu.getYaw();
     Endo_pitch = -mpu.getPitch();
     Endo_roll = mpu.getRoll();
-    s3Status = digitalRead(PIN_S3); // Read the state of the button
-    s4Status = digitalRead(PIN_S4); // Read the state of the button
+    s3Status = digitalRead(PIN_S3);
+    s4Status = digitalRead(PIN_S4);
   }
 }
 
 void sendOrientationUDP() {
-  StaticJsonDocument<256> doc;
+  JsonDocument doc;
   doc["device"] = deviceId;
   doc["roll"] = Endo_roll;
   doc["pitch"] = Endo_pitch;
   doc["yaw"] = Endo_yaw;
-  doc["s3"] = s3Status; // Button 1 status
-  doc["s4"] = s4Status; // Button 2 status
+  doc["s3"] = s3Status;
+  doc["s4"] = s4Status;
 
   char jsonBuffer[512];
-  size_t bytes = serializeJson(doc, jsonBuffer);
-    if (bytes == 0){
-        Serial.println(F("Serialization Failed"));
-        return;
-    }
+  serializeJson(doc, jsonBuffer, sizeof(jsonBuffer));
 
-  // Send to Computer
   udp.beginPacket(receiverComputerIP, udpPort);
-  udp.write((const uint8_t*)jsonBuffer, bytes); // Cast to const uint8_t*
+  udp.write((const uint8_t*)jsonBuffer, strlen(jsonBuffer));
   udp.endPacket();
 }
 
 void setup() {
   Serial.begin(115200);
-  Wire.begin();//needed for I2C to read IMU
+  Wire.begin();
   delay(2000);
 
-  // Inicialitza el MPU-9250
   if (!mpu.setup(0x68)) {
     while (1) {
       Serial.println("MPU connection failed.");
@@ -88,16 +82,13 @@ void setup() {
   Serial.println("MPU connected");
   delay(2000);
 
-  // Connecta a la xarxa Wi-Fi
   connectToWiFi();
-
-  // Comença UDP
   udp.begin(udpPort);
   Serial.println("UDP initialized.");
 }
 
 void loop() {
-  updateOrientation(); // Actualitza les dades del sensor
-  sendOrientationUDP(); // Envia les dades al receptor via UDP
-  delay(10); // Ajusta la freqüència d'enviament si cal
+  updateOrientation();
+  sendOrientationUDP();
+  delay(10);
 }
