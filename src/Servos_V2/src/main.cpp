@@ -17,13 +17,13 @@ IPAddress receiverComputerIP(192, 168, 1, 35);
 const int udpPort = 12345;
 WiFiUDP udp;
 
-// Servos
+// Servo settings
 Servo servo_yaw;
-servo_pitch;
-servo_roll1;
-servo_roll2;
+Servo servo_pitch;
+Servo servo_roll1;
+Servo servo_roll2;
 
-// Pines
+// Pins
 const int PIN_ANALOG_YAW = 36;
 const int PIN_SIGNAL_YAW = 32;
 const int PIN_ANALOG_PITCH = 39;
@@ -40,6 +40,8 @@ float Gri_roll = 0.0, Gri_pitch = 0.0, Gri_yaw = 0.0;
 float Torque_roll1 = 0.0, Torque_roll2 = 0.0, Torque_pitch = 0.0, Torque_yaw = 0.0;
 float prevRoll1 = 0, prevRoll2 = 0, prevPitch = 0, prevYaw = 0;
 float sumRoll1 = 0, sumRoll2 = 0, sumPitch = 0, sumYaw = 0;
+float OldValueRoll = 0, OldValuePitch = 0, OldValueYaw = 0;
+float roll = 0, pitch = 0, yaw = 0;
 int s1 = 1, s2 = 1;
 
 void connectToWiFi() {
@@ -62,14 +64,33 @@ void receiveOrientationUDP() {
     int len = udp.read(packetBuffer, 512);
     if (len > 0) {
       packetBuffer[len] = '\0';
-      JsonDocument doc;
-      if (deserializeJson(doc, packetBuffer)) return;
-      if (strcmp(doc["device"], "G3_Gri") == 0) {
+      Serial.print("Received packet size: ");
+      Serial.println(packetSize);
+      Serial.print("Received: ");
+      Serial.println((char*)packetBuffer);
+
+      JsonDocument doc;  // ✅ Versió 7
+      DeserializationError error = deserializeJson(doc, packetBuffer);
+      if (error) {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
+        return;
+      }
+
+      const char* device = doc["device"];
+      if (strcmp(device, "G3_Gri") == 0) {
         Gri_roll = round(doc["roll"].as<float>());
         Gri_pitch = round(doc["pitch"].as<float>());
         Gri_yaw = round(doc["yaw"].as<float>());
         s1 = doc["s1"];
         s2 = doc["s2"];
+        Serial.print("Gri_Roll: "); Serial.print(Gri_roll);
+        Serial.print(" Gri_Pitch: "); Serial.print(Gri_pitch);
+        Serial.print(" Gri_Yaw: "); Serial.println(Gri_yaw);
+        Serial.print("S1: "); Serial.print(s1);
+        Serial.print(" S2: "); Serial.println(s2);
+      } else {
+        Serial.println("Unknown device.");
       }
     }
   }
@@ -88,44 +109,39 @@ float getCurrent(uint32_t integrationTimeMs, int pin) {
 float getTorque(float& sum, int analogPin, float& previous) {
   float current = getCurrent(20, analogPin);
   sum += current;
-  float diff = fabs(sum - previous);
+  float diff = abs(sum - previous);
   previous = sum;
   return diff;
 }
 
 void moveServos() {
-  float delta = (s1 == 0) ? 40 : 0;
+  roll = Gri_roll;
+  OldValueRoll = roll;
+  pitch = Gri_pitch;
+  OldValuePitch = pitch;
+  yaw = Gri_yaw;
+  OldValueYaw = yaw;
+
+  float delta = 0;
+  if (s1 == 0) {
+    delta = 40;
+    Serial.println("S1 premut → Obrint");
+  }
+
   servo_roll1.write(Gri_roll + delta);
   servo_roll2.write(180 - Gri_roll);
-  servo_pitch.write(Gri_pitch);
-  servo_yaw.write(Gri_yaw);
-}
-
-void sendTorquesUDP() {
-  JsonDocument doc;
-  doc["device"] = deviceId;
-  doc["torque_yaw"] = Torque_yaw;
-  doc["torque_pitch"] = Torque_pitch;
-  doc["torque_roll1"] = Torque_roll1;
-  doc["torque_roll2"] = Torque_roll2;
-
-  char buffer[256];
-  serializeJson(doc, buffer);
-
-  udp.beginPacket(receiverESP32IP, udpPort);
-  udp.write((const uint8_t*)buffer, strlen(buffer));
-  udp.endPacket();
-
-  udp.beginPacket(receiverComputerIP, udpPort);
-  udp.write((const uint8_t*)buffer, strlen(buffer));
-  udp.endPacket();
+  servo_pitch.write(pitch);
+  servo_yaw.write(yaw);
 }
 
 void setup() {
   Serial.begin(115200);
   Wire.begin();
+  delay(2000);
+
   connectToWiFi();
   udp.begin(udpPort);
+  Serial.println("UDP initialized");
 
   ESP32PWM::allocateTimer(0);
   ESP32PWM::allocateTimer(1);
@@ -156,13 +172,5 @@ void setup() {
 void loop() {
   receiveOrientationUDP();
   moveServos();
-
-  // Leer torques
-  Torque_yaw = getTorque(sumYaw, PIN_ANALOG_YAW, prevYaw);
-  Torque_pitch = getTorque(sumPitch, PIN_ANALOG_PITCH, prevPitch);
-  Torque_roll1 = getTorque(sumRoll1, PIN_ANALOG_ROLL1, prevRoll1);
-  Torque_roll2 = getTorque(sumRoll2, PIN_ANALOG_ROLL2, prevRoll2);
-
-  sendTorquesUDP();
   delay(10);
 }
