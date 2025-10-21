@@ -6,7 +6,7 @@
 #include <IMU_RoboticsUB.h>   // Nom de la llibreria custom
 
 // Device ID
-const char *deviceId = "G5_Endo";
+const char *deviceId = "G3_Endo";
 
 // Wi-Fi credentials
 const char *ssid = "Robotics_UB";
