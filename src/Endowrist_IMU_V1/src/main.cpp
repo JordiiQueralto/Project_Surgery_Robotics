@@ -3,6 +3,7 @@
 #include "MPU9250.h"
 #include <Wire.h>
 #include <ArduinoJson.h>  // No cal .hpp, la versió 7 manté compatibilitat amb .h
+#include <IMU_RoboticsUB.h>   // Nom de la llibreria custom
 
 // Device ID
 const char *deviceId = "G3_Endo";
@@ -18,12 +19,12 @@ int s3Status = HIGH;
 int s4Status = HIGH;
 
 // UDP settings
-IPAddress receiverComputerIP(192, 168, 1, 35);
+IPAddress receiverComputerIP(192, 168, 1, 55);
 const int udpPort = 12345;
 WiFiUDP udp;
 
-// MPU-9250 object
-MPU9250 mpu;
+// IMU object
+IMU imu;
 
 // Orientation data
 float Endo_roll = 0.0, Endo_pitch = 0.0, Endo_yaw = 0.0;
@@ -42,13 +43,15 @@ void connectToWiFi() {
 }
 
 void updateOrientation() {
-  if (mpu.update()) {
-    Endo_yaw = -mpu.getYaw();
-    Endo_pitch = -mpu.getPitch();
-    Endo_roll = mpu.getRoll();
-    s3Status = digitalRead(PIN_S3);
-    s4Status = digitalRead(PIN_S4);
-  }
+  // Llegeix FIFO del DMP i actualitza càlculs interns
+  imu.ReadSensor();
+  // Obté els angles (roll, pitch, yaw) via GetRPW()
+  float* rpw = imu.GetRPW();
+  Endo_roll  = rpw[0];
+  Endo_pitch = rpw[1];
+  Endo_yaw   = rpw[2];
+  s3Status = digitalRead(PIN_S3);
+  s4Status = digitalRead(PIN_S4);
 }
 
 void sendOrientationUDP() {
@@ -61,7 +64,7 @@ void sendOrientationUDP() {
   doc["s4"] = s4Status;
 
   char jsonBuffer[512];
-  serializeJson(doc, jsonBuffer, sizeof(jsonBuffer));
+  serializeJson(doc, jsonBuffer);
 
   udp.beginPacket(receiverComputerIP, udpPort);
   udp.write((const uint8_t*)jsonBuffer, strlen(jsonBuffer));
@@ -73,14 +76,8 @@ void setup() {
   Wire.begin();
   delay(2000);
 
-  if (!mpu.setup(0x68)) {
-    while (1) {
-      Serial.println("MPU connection failed.");
-      delay(5000);
-    }
-  }
-  Serial.println("MPU connected");
-  delay(2000);
+  // Inicialitza IMU (amb DMP)
+  imu.Install();
 
   connectToWiFi();
   udp.begin(udpPort);
