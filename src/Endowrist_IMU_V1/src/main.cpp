@@ -19,7 +19,7 @@ int s3Status = HIGH;
 int s4Status = HIGH;
 
 // UDP settings
-IPAddress receiverComputerIP(192, 168, 1, 55);
+IPAddress receiverComputerIP(192, 168, 1, 35);
 const int udpPort = 12345;
 WiFiUDP udp;
 
