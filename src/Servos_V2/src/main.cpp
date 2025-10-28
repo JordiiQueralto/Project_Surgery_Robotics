@@ -41,6 +41,7 @@ float Torque_roll1 = 0.0, Torque_roll2 = 0.0, Torque_pitch = 0.0, Torque_yaw = 0
 float prevRoll1 = 0, prevRoll2 = 0, prevPitch = 0, prevYaw = 0;
 float sumRoll1 = 0, sumRoll2 = 0, sumPitch = 0, sumYaw = 0;
 float OldValueRoll = 0, OldValuePitch = 0, OldValueYaw = 0;
+float DeltaYaw = 0, OldDeltaYaw = 0;
 float roll = 0, pitch = 0, yaw = 0;
 int s1 = 1, s2 = 1;
 
