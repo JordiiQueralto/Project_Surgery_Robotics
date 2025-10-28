@@ -127,16 +127,19 @@ void moveServos() {
     delta = 40;
     Serial.println("S1 premut → Obrint");
   }
-  if Gri_roll >= 0 & Gri_roll <= 90:
+  if (Gri_roll >= 0 & Gri_roll <= 90) {
     servo_roll1.write(90 + Gri_roll + delta);
     servo_roll2.write(90 - Gri_roll);
-  elif Gri_roll < 360 & Gri_roll >= 270:
+  }
+  else if (Gri_roll < 360 & Gri_roll >= 270) {
     servo_roll1.write(90 - (Gri_roll - 360) + delta);
     servo_roll2.write(90 + (Gri_roll - 360));
-  else:
-    print("No correct roll value received");
-  
+  }
+  else {
+    printf("No correct roll value received");
+  }
   servo_pitch.write(pitch);
+  
   servo_yaw.write(yaw);
 }
 
