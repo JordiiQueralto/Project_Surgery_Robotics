@@ -131,13 +131,14 @@ def move_robot(robot, gripper, needle, text_label):
                     
         if current_Gripper_rpy:
             g_roll = Gripper_rpy.get("roll")
-            g_roll = g_roll - endo_roll  # Compensate for endowrist roll
             g_pitch = Gripper_rpy.get("pitch")
-            g_pitch = g_pitch - endo_yaw  # Compensate for endowrist yaw
             g_yaw = Gripper_rpy.get("yaw")
-            g_yaw = g_yaw + endo_pitch  # Compensate for endowrist pitch
             s1 = Gripper_rpy.get("s1")
             s2 = Gripper_rpy.get("s2")
+            if current_Endowrist_rpy:
+                g_roll = g_roll - endo_roll  # Compensate for endowrist roll
+                g_pitch = g_pitch - endo_yaw  # Compensate for endowrist yaw
+                g_yaw = g_yaw + endo_pitch  # Compensate for endowrist pitch
             #print(f"Gripper: {g_roll}, {g_pitch}, {g_yaw}")
             # Move Gripper
             gripper_pose = gripper.Pose()
