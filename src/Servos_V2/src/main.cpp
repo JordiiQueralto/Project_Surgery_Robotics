@@ -148,7 +148,13 @@ void moveServos() {
     printf("No correct pitch value received");
   }
 
-  servo_yaw.write(yaw);
+  DeltaYaw = Gri_yaw - OldValueYaw;
+  DeltaYaw = DeltaYaw + OldDeltaYaw;
+
+  OldValueYaw = Gri_yaw;
+  OldDeltaYaw = DeltaYaw;
+
+  servo_yaw.write(90 + DeltaYaw);
 }
 
 // Envia torques per UDP
