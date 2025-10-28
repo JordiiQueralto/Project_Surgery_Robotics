@@ -138,7 +138,16 @@ void moveServos() {
   else {
     printf("No correct roll value received");
   }
-  servo_pitch.write(pitch);
+
+  if (Gri_pitch >= 0 & Gri_pitch <= 90) {
+  servo_pitch.write(90 + pitch);}
+  else if (Gri_pitch < 360 & Gri_pitch >= 270) {
+    servo_pitch.write(90 - (360 - pitch));
+  }
+  else {
+    printf("No correct pitch value received");
+  }
+
   servo_yaw.write(yaw);
 }
 
