@@ -139,7 +139,6 @@ void moveServos() {
     printf("No correct roll value received");
   }
   servo_pitch.write(pitch);
-  
   servo_yaw.write(yaw);
 }
 
