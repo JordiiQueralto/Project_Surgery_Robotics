@@ -6,6 +6,7 @@ import tkinter as tk
 import threading
 import socket
 import json
+import os
 
 # Define the relative and absolute path to the RoboDK project file
 relative_path = "src/roboDK/SurgeryRobotics.rdk"
