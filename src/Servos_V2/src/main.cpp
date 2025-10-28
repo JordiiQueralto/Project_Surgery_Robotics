@@ -134,6 +134,37 @@ void moveServos() {
   servo_yaw.write(yaw);
 }
 
+// Envia torques per UDP
+void sendTorquesUDP() {
+  // Calcula torques llegint el corrent dels servos
+  Torque_roll1 = getTorque(sumRoll1, PIN_ANALOG_ROLL1, prevRoll1);
+  Torque_roll2 = getTorque(sumRoll2, PIN_ANALOG_ROLL2, prevRoll2);
+  Torque_pitch = getTorque(sumPitch, PIN_ANALOG_PITCH, prevPitch);
+  Torque_yaw   = getTorque(sumYaw, PIN_ANALOG_YAW, prevYaw);
+
+  JsonDocument doc;
+  doc["device"] = deviceId;
+  doc["Torque_roll1"] = Torque_roll1;
+  doc["Torque_pitch"] = Torque_pitch;
+  doc["Torque_yaw"]   = Torque_yaw;
+
+  char jsonBuffer[256];
+  serializeJson(doc, jsonBuffer);
+
+  // Envia al Gripper
+  udp.beginPacket(receiverESP32IP, udpPort);
+  udp.write((const uint8_t*)jsonBuffer, strlen(jsonBuffer));
+  udp.endPacket();
+
+  // Envia també al PC
+  udp.beginPacket(receiverComputerIP, udpPort);
+  udp.write((const uint8_t*)jsonBuffer, strlen(jsonBuffer));
+  udp.endPacket();
+
+  Serial.printf("Sent torques -> Roll1: %.2f | Pitch: %.2f | Yaw: %.2f\n", Torque_roll1, Torque_pitch, Torque_yaw);
+}
+
+
 void setup() {
   Serial.begin(115200);
   Wire.begin();
@@ -172,5 +203,6 @@ void setup() {
 void loop() {
   receiveOrientationUDP();
   moveServos();
+  sendTorquesUDP();
   delay(10);
 }
