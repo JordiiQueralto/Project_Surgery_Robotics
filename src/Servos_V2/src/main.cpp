@@ -12,7 +12,7 @@ const char *ssid = "Robotics_UB";
 const char *password = "rUBot_xx";
 
 // UDP settings
-IPAddress receiverESP32IP(192, 168, 1, 31);
+IPAddress receiverESP32IP(192, 168, 1, 51);
 IPAddress receiverComputerIP(192, 168, 1, 35);
 const int udpPort = 12345;
 WiFiUDP udp;
@@ -153,25 +153,25 @@ void moveServos() {
   //YAW
   if (firstYawIteration) {
   // Solo se ejecuta la primera vez
-  OldValueYaw Gri_yaw;
-  delta_yaw 0;
-  delta_yaw_old= 0;
+  OldValueYaw ; Gri_yaw;
+  DeltaYaw =0;
+  OldDeltaYaw= 0;
   // guardar referencia inicial // no hay movimiento aún
   firstYawIteration = false;
   // después ya no entra aquí
   }
   else {
   // En las siguientes iteraciones
-  Delta_Yaw = Gri_yaw - OldValueYaw;
+  DeltaYaw = Gri_yaw - OldValueYaw;
 
   // corregir salto circular
-  if (Delta_Yaw > 180) 
-    Delta_Yaw -= 360; 
-  else if (delta_yaw <-180) 
-    delta_yaw += 360;
+  if (DeltaYaw > 180) 
+    DeltaYaw -= 360; 
+  else if (DeltaYaw <-180) 
+    DeltaYaw += 360;
 
-  Delta_Yaw += OldDeltaYaw; 
-  OldDeltaYaw = Delta_Yaw;
+  DeltaYaw += OldDeltaYaw; 
+  OldDeltaYaw = DeltaYaw;
   OldValueYaw = Gri_yaw;
   }
   servo_yaw.write(90 + DeltaYaw); 
