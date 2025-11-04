@@ -108,13 +108,14 @@ void receiveTorquesUDP() {
       const char* device = doc["device"];
       if (strcmp(device, "G3_Servos") == 0) {
         Torque_roll1 = doc["Torque_roll1"] | 0.0;
+        Torque_roll2 = doc["Torque_roll2"] | 0.0;
         Torque_pitch = doc["Torque_pitch"] | 0.0;
         Torque_yaw   = doc["Torque_yaw"]   | 0.0;
 
         Serial.print("Received torques -> Roll1: ");
-        Serial.print(Torque_roll1);
+        Serial.println(Torque_roll1);
         Serial.print(" | Pitch: ");
-        Serial.print(Torque_pitch);
+        Serial.println(Torque_pitch);
         Serial.print(" | Yaw: ");
         Serial.println(Torque_yaw);
 

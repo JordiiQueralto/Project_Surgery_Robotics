@@ -188,6 +188,7 @@ void sendTorquesUDP() {
   JsonDocument doc;
   doc["device"] = deviceId;
   doc["Torque_roll1"] = Torque_roll1;
+  doc["Torque_roll2"] = Torque_roll2;
   doc["Torque_pitch"] = Torque_pitch;
   doc["Torque_yaw"]   = Torque_yaw;
 
