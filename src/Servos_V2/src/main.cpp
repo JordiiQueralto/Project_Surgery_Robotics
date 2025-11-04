@@ -133,8 +133,8 @@ void moveServos() {
     servo_roll2.write(90 - Gri_roll);
   }
   else if (Gri_roll < 360 & Gri_roll >= 270) {
-    servo_roll1.write(90 - (Gri_roll - 360) + delta);
-    servo_roll2.write(90 + (Gri_roll - 360));
+    servo_roll1.write(90 - (360 - Gri_roll) + delta);
+    servo_roll2.write(90 + (360 - Gri_roll));
   }
   else {
     printf("No correct roll value received");
