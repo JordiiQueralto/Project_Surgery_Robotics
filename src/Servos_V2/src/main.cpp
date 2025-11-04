@@ -44,6 +44,7 @@ float OldValueRoll = 0, OldValuePitch = 0, OldValueYaw = 0;
 float DeltaYaw = 0, OldDeltaYaw = 0;
 float roll = 0, pitch = 0, yaw = 0;
 int s1 = 1, s2 = 1;
+bool firstYawIteration = true;
 
 void connectToWiFi() {
   Serial.print("Connecting to Wi-Fi");
@@ -137,7 +138,7 @@ void moveServos() {
     servo_roll2.write(90 + (360 - Gri_roll));
   }
   else {
-    printf("No correct roll value received");
+    Serial.println("No correct roll value received");
   }
 
   if (Gri_pitch >= 0 & Gri_pitch <= 90) {
@@ -146,16 +147,34 @@ void moveServos() {
     servo_pitch.write(90 - (360 - pitch));
   }
   else {
-    printf("No correct pitch value received");
+    Serial.println("No correct pitch value received");
   }
 
-  DeltaYaw = Gri_yaw - OldValueYaw;
-  DeltaYaw = DeltaYaw + OldDeltaYaw;
+  //YAW
+  if (firstYawIteration) {
+  // Solo se ejecuta la primera vez
+  OldValueYaw Gri_yaw;
+  delta_yaw 0;
+  delta_yaw_old= 0;
+  // guardar referencia inicial // no hay movimiento aún
+  firstYawIteration = false;
+  // después ya no entra aquí
+  }
+  else {
+  // En las siguientes iteraciones
+  Delta_Yaw = Gri_yaw - OldValueYaw;
 
+  // corregir salto circular
+  if (Delta_Yaw > 180) 
+    Delta_Yaw -= 360; 
+  else if (delta_yaw <-180) 
+    delta_yaw += 360;
+
+  Delta_Yaw += OldDeltaYaw; 
+  OldDeltaYaw = Delta_Yaw;
   OldValueYaw = Gri_yaw;
-  OldDeltaYaw = DeltaYaw;
-
-  servo_yaw.write(90 + DeltaYaw);
+  }
+  servo_yaw.write(90 + DeltaYaw); 
 }
 
 // Envia torques per UDP
